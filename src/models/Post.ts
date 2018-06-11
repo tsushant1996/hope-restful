@@ -1,40 +1,43 @@
 import { model, Schema } from 'mongoose';
 
-// tslint:disable object-literal-sort-keys
 const PostSchema: Schema = new Schema({
-  timestamp: {
+  createdAt: {
     type: Date,
-    default: Date.now
+    default: Date.now,
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
   },
   title: {
     type: String,
     default: '',
-    required: true
+    required: true,
   },
   slug: {
     type: String,
     default: '',
     required: true,
     unique: true,
-    trim: true
+    trim: true,
   },
   content: {
     type: String,
     default: '',
-    required: true
+    required: true,
   },
   featuredImage: {
     type: String,
-    default: ''
+    default: '',
   },
   category: {
     type: String,
-    default: ''
+    default: '',
   },
   published: {
     type: Boolean,
-    default: false
-  }
+    default: false,
+  },
 });
 
 export default model('Post', PostSchema);
