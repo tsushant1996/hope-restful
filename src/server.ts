@@ -6,12 +6,13 @@ import * as express from 'express';
 import * as helmet from 'helmet';
 import * as mongoose from 'mongoose';
 import * as logger from 'morgan';
-import * as path from 'path';
-import PostRouter from './router/PostRouter';
-import UserRouter from './router/UserRouter';
+import { PostRouter } from './router/PostRouter';
+import { UserRouter } from './router/UserRouter';
+
+const postRouter = new PostRouter();
+const userRouter = new UserRouter();
 
 class Server {
-
   // set app to be of type express.Application
   public app: express.Application;
 
@@ -20,11 +21,10 @@ class Server {
     this.config();
     this.routes();
   }
-  
+
   // application config
   public config(): void {
-
-    const MONGO_URI: string = 'mongodb://localhost/tes'; 
+    const MONGO_URI: string = 'mongodb://localhost/tes';
     mongoose.connect(MONGO_URI || process.env.MONGODB_URI);
 
     // express middleware
@@ -39,12 +39,17 @@ class Server {
     // cors
     this.app.use((req, res, next) => {
       res.header('Access-Control-Allow-Origin', 'http://localhost:8080');
-      res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-      res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Access-Control-Allow-Credentials');
+      res.header(
+        'Access-Control-Allow-Methods',
+        'GET, POST, PUT, DELETE, OPTIONS',
+      );
+      res.header(
+        'Access-Control-Allow-Headers',
+        'Origin, X-Requested-With, Content-Type, Accept, Authorization, Access-Control-Allow-Credentials',
+      );
       res.header('Access-Control-Allow-Credentials', 'true');
       next();
     });
-    
   }
 
   // application routes
@@ -52,8 +57,8 @@ class Server {
     const router: express.Router = express.Router();
 
     this.app.use('/', router);
-    this.app.use('/api/v1/posts', PostRouter);
-    this.app.use('/api/v1/users', UserRouter);
+    this.app.use('/api/v1/posts', postRouter.router);
+    this.app.use('/api/v1/users', userRouter.router);
   }
 }
 
