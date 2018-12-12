@@ -1,43 +1,17 @@
 import { model, Schema } from 'mongoose';
 
+// All validation should be handled in the controller
+// keep models as minimal and simple as possible
+
 const PostSchema: Schema = new Schema({
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now,
-  },
-  title: {
-    type: String,
-    default: '',
-    required: true,
-  },
-  slug: {
-    type: String,
-    default: '',
-    required: true,
-    unique: true,
-    trim: true,
-  },
-  content: {
-    type: String,
-    default: '',
-    required: true,
-  },
-  featuredImage: {
-    type: String,
-    default: '',
-  },
-  category: {
-    type: String,
-    default: '',
-  },
-  published: {
-    type: Boolean,
-    default: false,
-  },
+  createdAt: Date,
+  updatedAt: Date,
+  title: String,
+  slug: String,
+  content: String,
+  featuredImage: String,
+  category: String,
+  published: Boolean,
 });
 
-export default model('Post', PostSchema);
+export const Post = model('Post', PostSchema);

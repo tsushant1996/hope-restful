@@ -6,14 +6,14 @@ import * as express from 'express';
 import * as helmet from 'helmet';
 import * as mongoose from 'mongoose';
 import * as logger from 'morgan';
-import { PostRouter } from './router/PostRouter';
-import { UserRouter } from './router/UserRouter';
 
-const postRouter = new PostRouter();
-const userRouter = new UserRouter();
+import { PostController } from './controller/PostController';
+import { UserController } from './controller/UserController';
+
+const postRouter = new PostController();
+const userRouter = new UserController();
 
 class Server {
-  // set app to be of type express.Application
   public app: express.Application;
 
   constructor() {
@@ -22,12 +22,10 @@ class Server {
     this.routes();
   }
 
-  // application config
   public config(): void {
     const MONGO_URI: string = 'mongodb://localhost/tes';
     mongoose.connect(MONGO_URI || process.env.MONGODB_URI);
 
-    // express middleware
     this.app.use(bodyParser.urlencoded({ extended: true }));
     this.app.use(bodyParser.json());
     this.app.use(cookieParser());
@@ -36,8 +34,7 @@ class Server {
     this.app.use(helmet());
     this.app.use(cors());
 
-    // cors
-    this.app.use((req, res, next) => {
+    this.app.use((_, res: express.Response, next: express.NextFunction) => {
       res.header('Access-Control-Allow-Origin', 'http://localhost:8080');
       res.header(
         'Access-Control-Allow-Methods',
@@ -52,15 +49,13 @@ class Server {
     });
   }
 
-  // application routes
   public routes(): void {
     const router: express.Router = express.Router();
 
     this.app.use('/', router);
-    this.app.use('/api/v1/posts', postRouter.router);
-    this.app.use('/api/v1/users', userRouter.router);
+    this.app.use('/posts', postRouter.router);
+    this.app.use('/users', userRouter.router);
   }
 }
 
-// export
 export default new Server().app;
