@@ -4,14 +4,19 @@ import { model, Schema } from 'mongoose';
 // keep models as minimal and simple as possible
 
 const PostSchema: Schema = new Schema({
-  createdAt: Date,
-  updatedAt: Date,
-  title: String,
-  slug: String,
-  content: String,
-  featuredImage: String,
-  category: String,
-  published: Boolean,
+    userId: {
+      type: 'Number'
+    },
+    id: {
+      type: 'Number'
+    },
+    title: {
+      type: 'String'
+    },
+    body: {
+      type: 'String'
+    },
+    comments:[]
 });
 
 export const Post = model('Post', PostSchema);

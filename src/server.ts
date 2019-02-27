@@ -23,7 +23,7 @@ class Server {
   }
 
   public config(): void {
-    const MONGO_URI: string = 'mongodb://localhost/tes';
+    const MONGO_URI: string = 'mongodb://localhost/master';
     mongoose.connect(MONGO_URI || process.env.MONGODB_URI);
 
     this.app.use(bodyParser.urlencoded({ extended: true }));

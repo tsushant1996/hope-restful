@@ -1,5 +1,17 @@
-import { NextFunction, Request, Response, Router } from 'express';
-import { Post } from '../models/Post';
+import {
+  NextFunction,
+  Request,
+  Response,
+  Router
+} from 'express';
+import {
+  Post
+} from '../models/Post';
+import * as rp from 'request-promise';
+import * as mongoose from 'mongoose';
+
+
+
 
 export class PostController {
   public router: Router;
@@ -13,94 +25,95 @@ export class PostController {
     _: Request,
     res: Response,
     next: NextFunction,
-  ): Promise<Response | void> {
+  ): Promise < Response | void > {
     try {
+
+      await mongoose.connection.close();
+      const userId = _.body.userId
+      const MONGO_URI: string = 'mongodb://localhost/user_' + userId;
+      await mongoose.connect(MONGO_URI || process.env.MONGODB_URI);
+
+
       const data = await Post.find();
-      return res.status(200).json({ data, message: 'success' });
+      await mongoose.connection.close();
+      return res.status(200).json({
+        data,
+        message: 'success'
+      });
     } catch (error) {
       next(error);
     }
   }
 
-  public async one(
+  
+  public async fetchPosts(
     req: Request,
     res: Response,
     next: NextFunction,
-  ): Promise<Response | void> {
-    const { slug } = req.params;
+  ) {
+    let counter = 0;
+
     try {
-      const data = await Post.findOne({ slug });
-      if (!data) {
-        throw new Error('Post not found');
+      let options: any = {
+        headers: {
+          'User-Agent': 'request'
+        },
+        json: true
       }
-      return res.status(200).json({ data, message: 'success' });
+      try {
+        // mongoose.disconnect();
+        let posts = await rp.get('https://jsonplaceholder.typicode.com/posts', options);
+
+
+        for (let item of posts) {
+
+          await mongoose.connection.close();
+          let comments = await rp.get(`https://jsonplaceholder.typicode.com/comments?postId=${item.id}`, options);
+
+          console.log("========>");
+
+
+          const MONGO_URI: string = 'mongodb://localhost/user_' + item.userId;
+          await mongoose.connect(MONGO_URI || process.env.MONGODB_URI);
+
+
+          let postData = new Post({
+            'userId': item.userId,
+            'id': item.id,
+            'body': item.body,
+            'title': item.title,
+            'comments': comments
+          });
+
+          let userData = await postData.save();
+
+          await mongoose.connection.close();
+
+
+          if (userData) {
+            counter = counter + 1;
+            console.log("data saved");
+          }
+          res.send({'message':`${counter} records saved`});
+
+
+        }
+
+      } catch (error) {
+        res.send(error);
+
+      }
+
+
     } catch (error) {
       return next(error.message);
     }
   }
 
-  public async create(
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ): Promise<Response | void> {
-    const {
-      title,
-      slug,
-      content,
-      featuredImage,
-      category,
-      published,
-    } = req.body;
-    try {
-      const post = await new Post({
-        title,
-        slug,
-        content,
-        featuredImage,
-        category,
-        published,
-      });
-      const data = await post.save();
-      res.status(201).json({ data, message: 'success' });
-    } catch (error) {
-      return next(error.message);
-    }
-  }
 
-  public async update(
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ): Promise<Response | void> {
-    const { slug } = req.body;
-    try {
-      const data = await Post.findOneAndUpdate({ slug }, req.body);
-      res.status(200).json({ data, message: 'success' });
-    } catch (error) {
-      return next(error.message);
-    }
-  }
-
-  public async delete(
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ): Promise<Response | void> {
-    const { slug } = req.body;
-    try {
-      const data = await Post.findOneAndRemove({ slug });
-      return res.status(204).json({ data, message: 'success' });
-    } catch (error) {
-      return next(error.message);
-    }
-  }
 
   public routes() {
-    this.router.get('/', this.all);
-    this.router.get('/:slug', this.one);
-    this.router.post('/', this.create);
-    this.router.put('/:slug', this.update);
-    this.router.delete('/:slug', this.delete);
+    this.router.post('/get-user-post', this.all);
+    this.router.post('/fetch-posts', this.fetchPosts);
   }
 }
